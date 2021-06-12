@@ -7,9 +7,9 @@ import unittest
 from bert_sudachipy.tokenization_bert_sudachipy import (
     VOCAB_FILES_NAMES,
     BertSudachipyTokenizer,
-    SudachipyTokenizer,
     WordpieceTokenizer
 )
+from bert_sudachipy.sudachipy_word_tokenizer import SudachipyWordTokenizer
 
 # from transformers.testing_utils import custom_tokenizers
 
@@ -53,7 +53,7 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
         shutil.rmtree(self.tmpdirname)
 
     def test_pickle_sudachipy_tokenizer(self):
-        tokenizer = self.tokenizer_class(self.vocab_file)
+        tokenizer = self.tokenizer_class(self.vocab_file, False, False)
         self.assertIsNotNone(tokenizer)
 
         text = "こんにちは、世界。\nこんばんは、世界。"
@@ -74,7 +74,7 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
 
     def test_sudachipy_tokenizer_small(self):
         try:
-            tokenizer = SudachipyTokenizer(dict_type="small")
+            tokenizer = SudachipyWordTokenizer(dict_type="small")
         except ModuleNotFoundError:
             return
 
@@ -86,7 +86,7 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
 
     def test_sudachipy_tokenizer_core(self):
         try:
-            tokenizer = SudachipyTokenizer(dict_type="core")
+            tokenizer = SudachipyWordTokenizer(dict_type="core")
         except ModuleNotFoundError:
             return
 
@@ -98,7 +98,7 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
 
     def test_sudachipy_tokenizer_full(self):
         try:
-            tokenizer = SudachipyTokenizer(dict_type="full")
+            tokenizer = SudachipyWordTokenizer(dict_type="full")
         except ModuleNotFoundError:
             return
 
@@ -110,7 +110,7 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
 
     def test_sudachipy_tokenizer_surface(self):
         try:
-            tokenizer = SudachipyTokenizer(word_form="surface")
+            tokenizer = SudachipyWordTokenizer(word_form="surface")
         except ModuleNotFoundError:
             return
 
@@ -122,7 +122,7 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
 
     def test_sudachipy_tokenizer_dictionary_form(self):
         try:
-            tokenizer = SudachipyTokenizer(word_form="dictionary")
+            tokenizer = SudachipyWordTokenizer(word_form="dictionary")
         except ModuleNotFoundError:
             return
 
@@ -133,7 +133,7 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
 
     def test_sudachipy_tokenizer_normalized_form(self):
         try:
-            tokenizer = SudachipyTokenizer(word_form="normalized")
+            tokenizer = SudachipyWordTokenizer(word_form="normalized")
         except ModuleNotFoundError:
             return
 
@@ -144,7 +144,7 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
 
     def test_sudachipy_tokenizer_unit_a(self):
         try:
-            tokenizer = SudachipyTokenizer(split_mode="A")
+            tokenizer = SudachipyWordTokenizer(split_mode="A")
         except ModuleNotFoundError:
             return
 
@@ -155,7 +155,7 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
 
     def test_sudachipy_tokenizer_unit_b(self):
         try:
-            tokenizer = SudachipyTokenizer(split_mode="B")
+            tokenizer = SudachipyWordTokenizer(split_mode="B")
         except ModuleNotFoundError:
             return
 
@@ -166,7 +166,7 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
 
     def test_sudachipy_tokenizer_unit_c(self):
         try:
-            tokenizer = SudachipyTokenizer(split_mode="C")
+            tokenizer = SudachipyWordTokenizer(split_mode="C")
         except ModuleNotFoundError:
             return
 
