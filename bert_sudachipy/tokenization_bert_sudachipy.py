@@ -58,7 +58,13 @@ CONJUGATIVE_POS = {'動詞', '形容詞', '形容動詞', '助動詞'}
 
 
 def pos_subsutitution_format(token):
-    return f'[{"-".join(token.part_of_speech())}]'
+    hierarchy = token.part_of_speech()
+    pos = f"[{hierarchy[0]}"
+    for p in hierarchy[1:]:
+        if p == "*":
+            break
+        pos += "-" + p
+    return pos + "]"
 
 
 class BertSudachipyTokenizer(PreTrainedTokenizer):
