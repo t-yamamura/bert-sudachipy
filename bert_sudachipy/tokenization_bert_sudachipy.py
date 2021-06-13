@@ -12,6 +12,25 @@ from .sudachipy_word_tokenizer import SudachipyWordTokenizer
 
 VOCAB_FILES_NAMES = {"vocab_file": "vocab.txt"}
 
+# TODO: set official URL
+PRETRAINED_VOCAB_FILES_MAP = {
+    "vocab_file": {
+        "WorksApplications/bert-base-japanese-sudachi": "https://.../vocab.txt",
+    }
+}
+
+PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
+    "WorksApplications/bert-base-japanese-sudachi": 512,
+}
+
+PRETRAINED_INIT_CONFIGURATION = {
+    "WorksApplications/bert-base-japanese-sudachi": {
+        "do_lower_case": False,
+        "word_tokenizer_type": "sudachipy",
+        "subword_tokenizer_type": "pos_substitution",
+    },
+}
+
 
 def load_vocabulary(vocab_file = VOCAB_FILES_NAMES["vocab_file"]):
     """Loads a vocabulary file into a dictionary."""
@@ -69,11 +88,18 @@ def pos_subsutitution_format(token):
 
 class BertSudachipyTokenizer(PreTrainedTokenizer):
 
+    vocab_files_names = VOCAB_FILES_NAMES
+    pretrained_vocab_files_map = PRETRAINED_VOCAB_FILES_MAP
+    pretrained_init_configuration = PRETRAINED_INIT_CONFIGURATION
+    max_model_input_sizes = PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES
+
     def __init__(
             self,
             vocab_file,
             do_lower_case=True,
+            do_word_tokenize=True,
             do_subword_tokenize=True,
+            word_tokenizer_type="sudachipy",
             subword_tokenizer_type="pos_substitution",
             unk_token="[UNK]",
             sep_token="[SEP]",
@@ -98,9 +124,15 @@ class BertSudachipyTokenizer(PreTrainedTokenizer):
 
         self.vocab = load_vocabulary(vocab_file)
         self.ids_to_tokens = OrderedDict([(ids, tok) for tok, ids in self.vocab.items()])
-        self.sudachipy_kwargs = copy.deepcopy(sudachipy_kwargs)
 
-        self.do_lower_case = do_lower_case
+        if not do_word_tokenize:
+            raise ValueError(f"`do_word_tokenize` must be True.")
+        elif word_tokenizer_type != "sudachipy":
+            raise ValueError(f"Invalid word_tokenizer_type '{word_tokenizer_type}' is specified.")
+
+        self.lower_case = do_lower_case
+
+        self.sudachipy_kwargs = copy.deepcopy(sudachipy_kwargs)
         self.word_tokenizer = SudachipyWordTokenizer(**(self.sudachipy_kwargs or {}))
         self.word_form_type = word_form_type
 
@@ -115,6 +147,10 @@ class BertSudachipyTokenizer(PreTrainedTokenizer):
                 self.subword_tokenizer = CharacterTokenizer(vocab=self.vocab, unk_token=self.unk_token)
             else:
                 raise ValueError(f"Invalid subword_tokenizer_type '{subword_tokenizer_type}' is specified.")
+
+    @property
+    def do_lower_case(self):
+        return self.lower_case
 
     @property
     def vocab_size(self):
