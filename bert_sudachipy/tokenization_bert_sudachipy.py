@@ -90,11 +90,6 @@ class BertSudachipyTokenizer(PreTrainedTokenizer):
             pad_token=pad_token,
             cls_token=cls_token,
             mask_token=mask_token,
-            do_lower_case=do_lower_case,
-            do_subword_tokenize=do_subword_tokenize,
-            subword_tokenizer_type=subword_tokenizer_type,
-            word_form_type=word_form_type,
-            sudachipy_kwargs=sudachipy_kwargs,
             **kwargs,
         )
 
@@ -105,6 +100,7 @@ class BertSudachipyTokenizer(PreTrainedTokenizer):
         self.ids_to_tokens = OrderedDict([(ids, tok) for tok, ids in self.vocab.items()])
         self.sudachipy_kwargs = copy.deepcopy(sudachipy_kwargs)
 
+        self.do_lower_case = do_lower_case
         self.word_tokenizer = SudachipyWordTokenizer(**(self.sudachipy_kwargs or {}))
         self.word_form_type = word_form_type
 
