@@ -96,7 +96,7 @@ class BertSudachipyTokenizer(PreTrainedTokenizer):
     def __init__(
             self,
             vocab_file,
-            do_lower_case=True,
+            do_lower_case=False,
             do_word_tokenize=True,
             do_subword_tokenize=True,
             word_tokenizer_type="sudachipy",
