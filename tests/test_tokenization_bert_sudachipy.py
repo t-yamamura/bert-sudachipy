@@ -6,10 +6,12 @@ import unittest
 
 from bert_sudachipy.tokenization_bert_sudachipy import (
     VOCAB_FILES_NAMES,
+    WORD_FORM_TYPES,
     BertSudachipyTokenizer,
     WordpieceTokenizer
 )
-from bert_sudachipy.sudachipy_word_tokenizer import SudachipyWordTokenizer
+from bert_sudachipy.sudachipy_word_tokenizer import (
+    SudachipyWordTokenizer)
 
 # from transformers.testing_utils import custom_tokenizers
 
@@ -53,7 +55,12 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
         shutil.rmtree(self.tmpdirname)
 
     def test_pickle_sudachipy_tokenizer(self):
-        tokenizer = self.tokenizer_class(self.vocab_file, False, False)
+        tokenizer = self.tokenizer_class(
+            self.vocab_file,
+            do_lower_case=False,
+            do_word_tokenize=True,
+            subword_tokenizer_type='wordpiece'
+        )
         self.assertIsNotNone(tokenizer)
 
         text = "こんにちは、世界。\nこんばんは、世界。"
@@ -79,7 +86,8 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
             return
 
         self.assertListEqual(
-            tokenizer.tokenize("appleはsmall辞書に、apple pieはcore辞書に、apple storeはfull辞書に収録されている。"),
+            list(map(WORD_FORM_TYPES['surface'],
+                     tokenizer.tokenize("appleはsmall辞書に、apple pieはcore辞書に、apple storeはfull辞書に収録されている。"))),
             ["apple", "は", "small", "辞書", "に", "、", "apple", " ", "pie", "は", "core", "辞書", "に", "、",
              "apple", " ", "store", "は", "full", "辞書", "に", "収録", "さ", "れ", "て", "いる", "。"]
         )
@@ -91,7 +99,8 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
             return
 
         self.assertListEqual(
-            tokenizer.tokenize("appleはsmall辞書に、apple pieはcore辞書に、apple storeはfull辞書に収録されている。"),
+            list(map(WORD_FORM_TYPES['surface'],
+                     tokenizer.tokenize("appleはsmall辞書に、apple pieはcore辞書に、apple storeはfull辞書に収録されている。"))),
             ["apple", "は", "small", "辞書", "に", "、", "apple pie", "は", "core", "辞書", "に", "、",
              "apple", " ", "store", "は", "full", "辞書", "に", "収録", "さ", "れ", "て", "いる", "。"]
         )
@@ -103,16 +112,15 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
             return
 
         self.assertListEqual(
-            tokenizer.tokenize("appleはsmall辞書に、apple pieはcore辞書に、apple storeはfull辞書に収録されている。"),
+            list(map(WORD_FORM_TYPES['surface'],
+                     tokenizer.tokenize("appleはsmall辞書に、apple pieはcore辞書に、apple storeはfull辞書に収録されている。"))),
             ["apple", "は", "small", "辞書", "に", "、", "apple pie", "は", "core", "辞書", "に", "、",
              "apple store", "は", "full", "辞書", "に", "収録", "さ", "れ", "て", "いる", "。"]
         )
 
     def test_sudachipy_tokenizer_surface(self):
-        try:
-            tokenizer = SudachipyWordTokenizer(word_form="surface")
-        except ModuleNotFoundError:
-            return
+        tokenizer = self.tokenizer_class(self.vocab_file, do_subword_tokenize=False,
+                                         word_form_type='surface')
 
         self.assertListEqual(
             tokenizer.tokenize("appleの辞書形はAppleで正規形はアップルである。"),
@@ -121,10 +129,8 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
         )
 
     def test_sudachipy_tokenizer_dictionary_form(self):
-        try:
-            tokenizer = SudachipyWordTokenizer(word_form="dictionary")
-        except ModuleNotFoundError:
-            return
+        tokenizer = self.tokenizer_class(self.vocab_file, do_subword_tokenize=False,
+                                         word_form_type='dictionary')
 
         self.assertListEqual(
             tokenizer.tokenize("appleの辞書形はAppleで正規形はアップルである。"),
@@ -132,14 +138,30 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
         )
 
     def test_sudachipy_tokenizer_normalized_form(self):
-        try:
-            tokenizer = SudachipyWordTokenizer(word_form="normalized")
-        except ModuleNotFoundError:
-            return
+        tokenizer = self.tokenizer_class(self.vocab_file, do_subword_tokenize=False,
+                                         word_form_type='normalized')
 
         self.assertListEqual(
             tokenizer.tokenize("appleの辞書形はAppleで正規形はアップルである。"),
             ["アップル", "の", "辞書形", "は", "アップル", "で", "正規", "形", "は", "アップル", "だ", "有る", "。"]
+        )
+
+    def test_sudachipy_tokenizer_dictionary_form_and_surface(self):
+        tokenizer = self.tokenizer_class(self.vocab_file, do_subword_tokenize=False,
+                                         word_form_type='dictionary_and_surface')
+
+        self.assertListEqual(
+            tokenizer.tokenize("appleの辞書形はAppleで正規形はアップルである。"),
+            ["Apple", "の", "辞書形", "は", "Apple", "で", "正規", "形", "は", "アップル", "で", "ある", "。"]
+        )
+
+    def test_sudachipy_tokenizer_normalized_form_and_surface(self):
+        tokenizer = self.tokenizer_class(self.vocab_file, do_subword_tokenize=False,
+                                         word_form_type='normalized_and_surface')
+
+        self.assertListEqual(
+            tokenizer.tokenize("appleの辞書形はAppleで正規形はアップルである。"),
+            ["アップル", "の", "辞書形", "は", "アップル", "で", "正規", "形", "は", "アップル", "で", "ある", "。"]
         )
 
     def test_sudachipy_tokenizer_unit_a(self):
@@ -149,7 +171,7 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
             return
 
         self.assertListEqual(
-            tokenizer.tokenize("徳島阿波おどり空港"),
+            list(map(WORD_FORM_TYPES['surface'], tokenizer.tokenize("徳島阿波おどり空港"))),
             ["徳島", "阿波", "おどり", "空港"]
         )
 
@@ -160,7 +182,7 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
             return
 
         self.assertListEqual(
-            tokenizer.tokenize("徳島阿波おどり空港"),
+            list(map(WORD_FORM_TYPES['surface'], tokenizer.tokenize("徳島阿波おどり空港"))),
             ["徳島", "阿波おどり", "空港"]
         )
 
@@ -171,7 +193,7 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
             return
 
         self.assertListEqual(
-            tokenizer.tokenize("徳島阿波おどり空港"),
+            list(map(WORD_FORM_TYPES['surface'], tokenizer.tokenize("徳島阿波おどり空港"))),
             ["徳島阿波おどり空港"]
         )
 
