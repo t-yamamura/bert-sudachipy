@@ -76,7 +76,7 @@ WORD_FORM_TYPES = {
 CONJUGATIVE_POS = {'動詞', '形容詞', '形容動詞', '助動詞'}
 
 
-def pos_subsutitution_format(token):
+def pos_substitution_format(token):
     hierarchy = token.part_of_speech()
     pos = f"[{hierarchy[0]}"
     for p in hierarchy[1:]:
@@ -179,7 +179,7 @@ class BertSudachipyTokenizer(PreTrainedTokenizer):
                     word = word_format(token)
                     if word in self.vocab:
                         return word
-                    substitute = pos_subsutitution_format(token)
+                    substitute = pos_substitution_format(token)
                     if substitute in self.vocab:
                         return substitute
                     return self.unk_token
