@@ -10,8 +10,7 @@ from bert_sudachipy.tokenization_bert_sudachipy import (
     BertSudachipyTokenizer,
     WordpieceTokenizer
 )
-from bert_sudachipy.sudachipy_word_tokenizer import (
-    SudachipyWordTokenizer)
+from bert_sudachipy.sudachipy_word_tokenizer import SudachipyWordTokenizer
 
 # from transformers.testing_utils import custom_tokenizers
 
@@ -212,6 +211,35 @@ class BertSudachipyTokenizationTest(unittest.TestCase):
         self.assertListEqual(tokenizer.tokenize("こんばんは"), ["こん", "##ばんは"])
 
         self.assertListEqual(tokenizer.tokenize("こんばんは こんばんにちは こんにちは"), ["こん", "##ばんは", "[UNK]", "こんにちは"])
+
+    def test_sequence_builders(self):
+        pass
+
+
+class BertSudachipyCharacterTokenizationTest(unittest.TestCase):
+
+    tokenizer_class = BertSudachipyTokenizer
+
+    def setUp(self):
+        super().setUp()
+        self.tmpdirname = tempfile.mkdtemp()
+
+        vocab_tokens = ["[UNK]", "[CLS]", "[SEP]", "こ", "ん", "に", "ち", "は", "ば", "世", "界", "、", "。"]
+
+        self.vocab_file = os.path.join(self.tmpdirname, VOCAB_FILES_NAMES["vocab_file"])
+        with open(self.vocab_file, "w", encoding="utf-8") as vocab_writer:
+            vocab_writer.write("".join([x + "\n" for x in vocab_tokens]))
+
+    def test_full_tokenizer(self):
+        tokenizer = self.tokenizer_class(self.vocab_file, subword_tokenizer_type="character")
+
+        tokens = tokenizer.tokenize("こんにちは、世界。こんばんは、世界。")
+        self.assertListEqual(
+            tokens, ["こ", "ん", "に", "ち", "は", "、", "世", "界", "。", "こ", "ん", "ば", "ん", "は", "、", "世", "界", "。"]
+        )
+        self.assertListEqual(
+            tokenizer.convert_tokens_to_ids(tokens), [3, 4, 5, 6, 7, 11, 9, 10, 12, 3, 4, 8, 4, 7, 11, 9, 10, 12]
+        )
 
     def test_sequence_builders(self):
         pass
