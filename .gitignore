@@ -139,3 +139,10 @@ cython_debug/
 
 # pycharm
 .idea/
+
+# notebooks for dev
+notebooks_for_dev/
+
+# pretraining data
+pretraining/bert/datasets/
+pretraining/bert/models/
