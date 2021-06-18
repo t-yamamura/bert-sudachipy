@@ -1,11 +1,47 @@
-import sys
+import argparse
+import os
 from progressbar import progressbar as tqdm
+from typing import List
 
-MIN_DATA_SIZE = 760000
 
-file_name = sys.argv[1]
-file_path = "/".join(file_name.split("/")[:-1])
-print(file_name, file_path)
+def write_lines(tmp_lines: List[str], file_dir: str, file_name: str, file_id: int, file_ext: str):
+    with open(os.path.join(file_dir, f"{file_name}{file_id:0=2}{file_ext}"), 'w') as f:
+        for line in tmp_lines:
+            print(line, file=f)
 
-with open(file_name) as f:
-    datas = f.readline()
+
+def main():
+    args = get_args()
+
+    file_dir = os.path.dirname(args.input_file)
+    file_name, file_ext = os.path.splitext(os.path.basename(args.input_file))
+
+    with open(args.input_file, 'r') as f:
+        lines = f.readlines()
+
+    tmp_lines = []
+    file_id = 1
+    for line in tqdm(lines):
+        tmp_lines.append(line.strip())
+        if len(tmp_lines) > args.line_per_file and line == '\n':
+            write_lines(tmp_lines, file_dir, file_name, file_id, file_ext)
+            file_id += 1
+            tmp_lines = []
+
+    if len(tmp_lines) > 0:
+        write_lines(tmp_lines, file_dir, file_name, file_id, file_ext)
+
+
+def get_args():
+    parser = argparse.ArgumentParser(description='split dataset')
+
+    parser.add_argument('-i', '--input_file', help='input file to be splitted (corpus splitted by paragraph)')
+    parser.add_argument('--line_per_file', help='max number of lines per file')
+
+    args = parser.parse_args()
+
+    return args
+
+
+if __name__ == '__main__':
+    main()

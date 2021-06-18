@@ -63,6 +63,7 @@ def main():
 
 def get_args():
     parser = argparse.ArgumentParser(description='train tokenizer')
+
     # input
     parser.add_argument('-f', '--input_file', default='',
                         help='input file to train tokenizer (corpus splitted by paragraph')
