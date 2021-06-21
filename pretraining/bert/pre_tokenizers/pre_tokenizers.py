@@ -14,11 +14,11 @@ class CustomWordPieceTokenizer(BertWordPieceTokenizer):
         super().__init__(handle_chinese_chars=False, strip_accents=False, **kwargs)
 
     def set_pre_tokenizer(self, custom_pre_tokenizer):
-        self._tokenizer.pre_tokenizer = PreTokenizer.custom(custom_pre_tokenizer)
+        self.pre_tokenizer = PreTokenizer.custom(custom_pre_tokenizer)
 
-    def save(self, output_tokenizer_path):
-        self._tokenizer.pre_tokenizer = BertPreTokenizer()
-        super().save(output_tokenizer_path)
+    def save(self, output_tokenizer_path, pretty=False):
+        self.pre_tokenizer = BertPreTokenizer()
+        super().save(output_tokenizer_path, pretty=pretty)
 
     def save_vocab(self, output_dir, prefix):
         self._tokenizer.model.save(output_dir, prefix)
