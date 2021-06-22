@@ -1,65 +1,39 @@
 import textspan
-from tokenizers import NormalizedString, PreTokenizedString, Tokenizer
-from tokenizers.implementations import BertWordPieceTokenizer
-from tokenizers.normalizers import Lowercase, NFKC, Sequence
-from tokenizers.pre_tokenizers import BertPreTokenizer, PreTokenizer
-from typing import List, Type
+from tokenizers import NormalizedString, PreTokenizedString
+from typing import List, Optional
 
-from sudachipy import dictionary
+from bert_sudachipy.sudachipy_word_tokenizer import SudachipyWordTokenizer
+from bert_sudachipy.tokenization_bert_sudachipy import WORD_FORM_TYPES
 
 
-class CustomWordPieceTokenizer(BertWordPieceTokenizer):
+class SudachipyPreTokenizer(SudachipyWordTokenizer):
+    def __init__(
+        self,
+        split_mode: Optional[str] = "C",
+        dict_type: Optional[str] = "core",
+        word_form_type: Optional[str] = "surface",
+        **kwargs
+    ):
+        super().__init__(split_mode=split_mode, dict_type=dict_type, **kwargs)
+        self.word_form_type = word_form_type
 
-    def __init__(self, **kwargs):
-        super().__init__(handle_chinese_chars=False, strip_accents=False, **kwargs)
-
-    def set_pre_tokenizer(self, custom_pre_tokenizer):
-        self.pre_tokenizer = PreTokenizer.custom(custom_pre_tokenizer)
-
-    def save(self, output_tokenizer_path, pretty=False):
-        self.pre_tokenizer = BertPreTokenizer()
-        super().save(output_tokenizer_path, pretty=pretty)
-
-    def save_vocab(self, output_dir, prefix):
-        self._tokenizer.model.save(output_dir, prefix)
+    def pre_tokenize(self, pretok: PreTokenizedString):
+        pretok.split(self.sudachi_split)
 
     @staticmethod
-    def load_from_tokenizer_file(input_tokenizer_path, pre_tokenizer):
-        tokenizer = Tokenizer.from_file(input_tokenizer_path)
-        tokenizer.pre_tokenizer = PreTokenizer.custom(pre_tokenizer)
-        return tokenizer
+    def split_normalized_string(normalized_string: NormalizedString, tokens: List[str]) -> List[NormalizedString]:
+        token_spans = textspan.get_original_spans(tokens, str(normalized_string).strip())
+        return [normalized_string[start:end] for token_span in token_spans for start, end in token_span]
 
+    def sudachi_split(self, i: int, normalized_string: NormalizedString) -> List[NormalizedString]:
+        morphs = super().tokenize(str(normalized_string).strip())
+        tokens = list(map(lambda m: m.surface(), morphs))
+        normalized_strings = self.split_normalized_string(normalized_string, tokens)
+        if not (len(morphs) == len(tokens) == len(normalized_strings)):
+            raise ValueError(len(morphs), len(tokens), len(normalized_strings), tokens, normalized_strings)
 
-class JapanesePreTokenizer:
-    def custom_split(self, i: int, normalized_string: NormalizedString) -> List[NormalizedString]:
-        raise NotImplementedError()
+        if self.word_form_type != 'surface':
+            word_formatter = WORD_FORM_TYPES[self.word_form_type]
+            _ = [ns.replace(ns.normalized, word_formatter(m)) for ns, m in zip(normalized_strings, morphs)]
 
-    def pre_tokenize(self, pretok):
-        pretok.split(self.custom_split)
-
-    def normalized_string2spans(self, normalized_string: NormalizedString, tokens):
-        tokens_spans = textspan.get_original_spans(tokens, str(normalized_string).strip())
-        return [normalized_string[start:end] for char_spans in tokens_spans for start, end in char_spans]
-
-
-class SudachipyPreTokenizer(JapanesePreTokenizer):
-    def __init__(self, dict_type, mode):
-        self.dict_type = dict_type
-        self.mode = mode
-        self.tokenizer_obj = dictionary.Dictionary(dict_type=dict_type).create()
-
-    def tokenize(self, sequence: NormalizedString):
-        surface_tokens = []
-        normalized_tokens = []
-        for m in self.tokenizer_obj.tokenize(str(sequence).strip(), self.mode):
-            surface_tokens.append(m.surface())
-            normalized_tokens.append((m.normalized_form()))
-        return surface_tokens, normalized_tokens
-
-    def custom_split(self, i: int, normalized_string: NormalizedString) -> List[NormalizedString]:
-        tokens, morphs = self.tokenize(normalized_string)
-        spans = self.normalized_string2spans(normalized_string, tokens)
-        if len(morphs) != len(spans):
-            raise ValueError(len(morphs), len(spans), morphs, tokens, spans)
-        _ = [span.replace(span.normalized, m) for m, span in zip(morphs, spans)]
-        return spans
+        return normalized_strings

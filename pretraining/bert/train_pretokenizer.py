@@ -7,19 +7,9 @@ from sudachipy import tokenizer, dictionary
 from tokenizers.normalizers import NFKC, Sequence
 # from tokenizers.normalizers import Lowercase, NFKC, Strip, Sequence
 
-from pretraining.bert.pre_tokenizers.pre_tokenizers import CustomWordPieceTokenizer, SudachipyPreTokenizer
-
-
-def get_split_mode(split_mode: str):
-    split_mode = split_mode.lower()
-    if split_mode == 'a':
-        return tokenizer.Tokenizer.SplitMode.A
-    elif split_mode == 'b':
-        return tokenizer.Tokenizer.SplitMode.B
-    elif split_mode == 'c':
-        return tokenizer.Tokenizer.SplitMode.C
-    else:
-        raise ValueError()
+# from pretraining.bert.pre_tokenizers.pre_tokenizers import CustomWordPieceTokenizer, SudachipyPreTokenizer
+from pretraining.bert.pre_tokenizers.japanese_bert_wordpiece_tokenizer import JapaneseBertWordPieceTokenizer
+from pretraining.bert.pre_tokenizers.pre_tokenizers import SudachipyPreTokenizer
 
 
 def main():
@@ -45,11 +35,15 @@ def main():
         NFKC(),
     ])
 
-    wp_tokenizer = CustomWordPieceTokenizer()
+    wp_tokenizer = JapaneseBertWordPieceTokenizer()
     wp_tokenizer.normalizer = normalizer
 
-    split_mode = get_split_mode(args.split_mode)
-    sudachi_pre_tokenizer = SudachipyPreTokenizer(args.dict_type, split_mode)
+    # split_mode = get_split_mode(args.split_mode)
+    sudachi_pre_tokenizer = SudachipyPreTokenizer(
+        split_mode=args.split_mode,
+        dict_type=args.dict_type,
+        word_form_type=args.word_form_type
+    )
     wp_tokenizer.set_pre_tokenizer(sudachi_pre_tokenizer)
 
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -57,6 +51,7 @@ def main():
 
     print("#vocab:", wp_tokenizer.get_vocab_size())
 
+    os.makedirs(args.output_dir, exist_ok=True)
     wp_tokenizer.save(os.path.join(args.output_dir, args.config_name))
     wp_tokenizer.save_vocab(args.output_dir, args.vocab_prefix)
 
@@ -78,11 +73,13 @@ def get_args():
     # sudachi
     parser.add_argument('--dict_type', default='core', choices=['small', 'core', 'full'])
     parser.add_argument('--split_mode', default='C', choices=['A', 'B', 'C', 'a', 'b', 'c'])
+    parser.add_argument('--word_form_type', default='surface',
+                        choices=['surface', 'dictionary', 'normalized', 'dictionary_and_surface', 'normalized_and_surface'])
 
     # output
     parser.add_argument('-o', '--output_dir', help='path to be saved tokenizer file')
-    parser.add_argument('-c', '--config_name', help='output json file name')
-    parser.add_argument('-v', '--vocab_prefix', help='prefix of vocab file')
+    parser.add_argument('-c', '--config_name', default='config.jon', help='output json file name')
+    parser.add_argument('-v', '--vocab_prefix', default='', help='prefix of vocab file')
 
     args = parser.parse_args()
 
