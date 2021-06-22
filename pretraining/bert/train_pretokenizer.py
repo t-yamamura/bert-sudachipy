@@ -1,13 +1,8 @@
 import argparse
 import os
-import sys
 from glob import glob
-from pathlib import Path
-from sudachipy import tokenizer, dictionary
 from tokenizers.normalizers import NFKC, Sequence
-# from tokenizers.normalizers import Lowercase, NFKC, Strip, Sequence
 
-# from pretraining.bert.pre_tokenizers.pre_tokenizers import CustomWordPieceTokenizer, SudachipyPreTokenizer
 from pretraining.bert.pre_tokenizers.japanese_bert_wordpiece_tokenizer import JapaneseBertWordPieceTokenizer
 from pretraining.bert.pre_tokenizers.pre_tokenizers import SudachipyPreTokenizer
 
@@ -61,7 +56,7 @@ def get_args():
 
     # input
     parser.add_argument('-f', '--input_file', default='',
-                        help='input file to train tokenizer (corpus splitted by paragraph')
+                        help='input file to train tokenizer (corpus splitted by paragraph)')
     parser.add_argument('-d', '--input_dir', default='',
                         help='input dir containing files to train tokenizer')
 
@@ -78,7 +73,7 @@ def get_args():
 
     # output
     parser.add_argument('-o', '--output_dir', help='path to be saved tokenizer file')
-    parser.add_argument('-c', '--config_name', default='config.jon', help='output json file name')
+    parser.add_argument('-c', '--config_name', default='config.json', help='output json file name')
     parser.add_argument('-v', '--vocab_prefix', default='', help='prefix of vocab file')
 
     args = parser.parse_args()

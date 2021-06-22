@@ -1,66 +1,93 @@
-# Sudachi BERT の学習
+# Training Sudachi BERT Models
 
-> 学習コーパス: wiki40b  
-> https://www.tensorflow.org/datasets/catalog/wiki40b
+## Pretrained models
 
+Pre-trained BERT models and tokenizer are coming soon!
+
+
+## Set up
+
+We use TensorFlow 2.x implementation for BERT to pretrain models.
+
+https://github.com/tensorflow/models/tree/master/official/nlp/bert
+
+To pretrain BERT models, you need to download [models](https://github.com/tensorflow/models) repository.
+
+```shell script
+$ git clone --recursive https://github.com/WorksApplications/chitra/
 ```
-# --recursive をつけて, tensorflow の models も一緒にclone
-git clone --recursive https://github.com/t-yamamura/bert_sudachipy/
+
+In addition, you need to install the required packages to pretrain models.
+
+```shell script
+$ cd chitra/
+$ pip install -r pretraining/bert/requirements.txt
 ```
 
+## Details of pretraining
 
-## 1.学習データの準備
+### 1. Corpus generation and preprocessing
 
-wiki40bのダウンロードと事前学習用のためのデータの整形を行う．
+The following sample codes are to train BERT models with [wiki40b](https://www.tensorflow.org/datasets/catalog/wiki40b) dataset.
 
-ダウンロードしたデータは `./datasets/corpus` 以下に，
-またそのコーパスをパラグラフ（段落）単位に空行を挟んだものは `./datasets/corpus_splitted_by_paragraph` 以下に出力される．
-
-> ダウンロード時間は 90 * 3 min くらい？
+This script downloads [wiki40b](https://www.tensorflow.org/datasets/catalog/wiki40b) onto `./datasets/corpus` and prepares paragraph-splitted data in ``./datasets/corpus_splitted_by_paragraph`.
 
 
 ```shell script
-./run_prepare_dataset.sh
+$ cd pretraining/bert/
+# It may take several hours.
+$ ./run_prepare_dataset.sh
 ```
 
 
-## 2.Tokenizer の学習
+### 2. Building vocabulary
 
-事前学習における Tokenizer の学習では，入力ファイルまたは入力ディレクトリを指定する．
-入力ファイルのフォーマットは，[1. 学習データの準備](#1.学習データの準備) で生成された `./datasets/corpus_splitted_by_paragraph` 以下の段落区切りのファイルである．
+You can specify tokenizer options of SudachiPy, such as sudachi dictionaries, split modes, and word forms.
 
+The following word forms are available:
+
+* `surface`
+* `dictionary`
+* `normalized`
+* `dictionary_and_surface`
+* `normalized_and_surface`
+
+We used WordPiece to obtain subwords.
+We used an implementation of WordPiece in [Tokenizers](https://github.com/huggingface/tokenizers).
 
 ```shell script
-python pretraining/bert/train_pretokenizer.py
+$ python train_pretokenizer.py \
+--input_file datasets/corpus_splitted_by_paragraph/ja_wiki40b_*.paragraph.txt \
+--dict_type core
+--split_mode C
+--word_form_type normalized
+--output_dir ja_wiki40b_*_CoreDic_normalized_unit-C
+--config_name ja_wiki40b_*_CoreDic_normalized_unit-C_config.json
+--vocab_prefix ja_wiki40b_*_CoreDic_normalized_unit-C
 ```
 
-## 3. データの分割
+### 3.Creating data for pretraining
 
+First, you need to split dataset into multiple files.
 
 ```shell script
-cd pretraining/bert
-python data_split.py \
---input_file ./datasets/corpus_splitted_by_paragraph/ja_wiki40b_small.paragraph.txt \
+# splits wiki40b into multiple files
+$ python data_split.py \
+--input_file datasets/corpus_splitted_by_paragraph/ja_wiki40b_*.paragraph.txt \
 --line_per_file 760000
 ```
 
+Please refer to `./run_create_pretraining_data.sh` to create pretraining data.
 
-## 4. 事前学習データの準備
-
-```shell script
-./run_create_pretraining_data.sh
-```
-
-## 5. 事前学習
-
+### 4.Training
 
 ```shell script
-pwd
+$ pwd
 # /path/to/bert_sudachipy
-sudo pip3 install -r models/official/requirements.txt
-export PYTHONPATH="$PYTHONPATH:./models"
-cd models/
-WORK_DIR="../pretraining/bert"; py official/nlp/bert/run_pretraining.py \
+$ sudo pip3 install -r models/official/requirements.txt
+$ export PYTHONPATH="$PYTHONPATH:./models"
+$ cd models/
+$ WORK_DIR="../pretraining/bert"; py official/nlp/bert/run_pretraining.py \
 --input_files="$WORK_DIR/models/pretraining_small_*record" \
 --model_dir="$WORK_DIR/models/" \
 --bert_config_file="$WORK_DIR/models/small_config.json" \
@@ -72,11 +99,9 @@ WORK_DIR="../pretraining/bert"; py official/nlp/bert/run_pretraining.py \
 --num_steps_per_epoch=10000 \
 --optimizer_type=adamw \
 --warmup_steps=10000
-
 ```
 
-
-### 6. pytorch形式へのモデルの変換
+### 5.Converting a model to pytorch format
 
 ```shell script
 cd ../pretraining/bert/
