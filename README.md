@@ -8,6 +8,7 @@ chiTra is a Japanese tokenizer for [Transformers](https://github.com/huggingface
 
 chiTra stands for Suda**chi** for **Tra**nsformers.
 
+
 ## Quick Tour
 
 ```python
@@ -20,6 +21,7 @@ chiTra stands for Suda**chi** for **Tra**nsformers.
 ```
 
 > Pre-trained BERT models and tokenizer are coming soon!
+
 
 ## Installation
 
@@ -35,9 +37,16 @@ In such cases, you need to install the dictionaries.
 $ pip install sudachidict_small sudachidict_full
 ```
 
+
+## Pretraining
+
+Please refer to [pretraining/bert/README.md](https://github.com/t-yamamura/bert_sudachipy/tree/main/pretraining/bert).
+
+
 ## Roadmap
 
 * Releasing pre-trained models for BERT
+
 
 ## For Developers
 
