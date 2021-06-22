@@ -2,6 +2,7 @@
 
 [![](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/release/python-360/)
 [![test](https://github.com/t-yamamura/bert_sudachipy/actions/workflows/test.yaml/badge.svg)](https://github.com/t-yamamura/bert_sudachipy/actions/workflows/test.yaml)
+[![](https://img.shields.io/github/license/t-yamamura/bert_sudachipy.svg)](https://github.com/t-yamamura/bert_sudachipy/blob/main/LICENSE)
 
 chiTra is a Japanese tokenizer for [Transformers](https://github.com/huggingface/transformers).
 
